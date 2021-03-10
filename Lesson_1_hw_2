@@ -1,0 +1,16 @@
+import requests
+import json
+
+url = 'https://api-seller.ozon.ru/v1/categories/tree'
+
+headers = {'Host': 'api-seller.ozon.ru',
+          'Client-Id': '134033',
+          'Api-Key': '59c2812d-c80c-4bcf-b43b-6633af3204db',
+          'accept': 'application/json'}
+
+response = requests.get(url, headers=headers)
+
+print(response.text)
+
+with open('user_repos.json', 'w') as f:
+    json.dump(response.json(), f)
