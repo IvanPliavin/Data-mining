@@ -1,0 +1,58 @@
+import requests
+from pprint import pprint
+from bs4 import BeautifulSoup as bs
+from urllib.parse import urlparse as ur
+
+
+#Необходимо собрать информацию о вакансиях на вводимую должность (используем input или через аргументы)
+#с сайтов Superjob и HH. Приложение должно анализировать несколько страниц сайта (также вводим через
+# input или аргументы). Получившийся список должен содержать в себе минимум:
+#* Наименование вакансии.
+#* Предлагаемую зарплату (отдельно минимальную, максимальную и валюту).
+#* Ссылку на саму вакансию.
+#* Сайт, откуда собрана вакансия.
+#По желанию можно добавить ещё параметры вакансии (например, работодателя и расположение).
+# Структура должна быть одинаковая для вакансий с обоих сайтов. Общий результат можно вывести с
+# помощью dataFrame через pandas.
+
+print('Введите название должности')
+job = input()
+print('Результаты поиска:')
+
+url = 'https://hh.ru'
+
+params = {'clusters': 'true',
+          'enable_snippets': 'true',
+          'st': 'searchVacancy',
+          'text': job}
+
+headers = {'User-Agent':'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/89.0.4389.72 Safari/537.36'}
+
+response = requests.get(url + '/search/vacancy', params=params, headers=headers)
+if response.ok:
+    soup = bs(response.text, 'html.parser')
+    job_list = soup.findAll('div', {'class': 'vacancy-serp-item'})
+    jobs = []
+    i = 0
+    for job in job_list:
+        job_data = {}
+        i = i + 1
+        job_info = job.find('a', {'class': 'bloko-link HH-LinkModifier HH-VacancyActivityAnalytics-Vacancy'})
+        job_name = job_info.getText()
+        job_link = job_info['href']
+        job_employer = job.find('a', {'data-qa': 'vacancy-serp__vacancy-employer'}).getText()
+        job_location = job.find('span', {'data-qa': 'vacancy-serp__vacancy-address'}).getText()
+        job_salary = job.find('div', {'class': 'vacancy-serp-item__sidebar'}).getText()
+        job_site = ur(url).hostname
+#        print(str(i) + ' ' + job_name + ' ' + job_salary + ' ' + job_site + ' ' + job_employer + ' ' + job_location + ' ' + job_link)
+        job_data['number'] = i
+        job_data['name'] = job_name
+        job_data['salary'] = job_salary
+        job_data['link'] = job_link
+        job_data['site'] = job_site
+        job_data['employer'] = job_employer
+        job_data['location'] = job_location
+
+        jobs.append(job_data)
+
+pprint(jobs)
