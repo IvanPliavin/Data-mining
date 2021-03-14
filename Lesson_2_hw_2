@@ -1,7 +1,3 @@
-import requests
-from pprint import pprint
-from bs4 import BeautifulSoup as bs
-import pandas as pd
 #Необходимо собрать информацию о вакансиях на вводимую должность (используем input или через аргументы)
 #с сайтов Superjob и HH. Приложение должно анализировать несколько страниц сайта (также вводим через
 # input или аргументы). Получившийся список должен содержать в себе минимум:
@@ -13,6 +9,10 @@ import pandas as pd
 # Структура должна быть одинаковая для вакансий с обоих сайтов. Общий результат можно вывести с
 # помощью dataFrame через pandas.
 
+import requests
+from pprint import pprint
+from bs4 import BeautifulSoup as bs
+import pandas as pd
 
 # Функция сбора данных
 def hh_ru(vacancy):
