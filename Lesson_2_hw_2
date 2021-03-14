@@ -1,9 +1,7 @@
 import requests
 from pprint import pprint
 from bs4 import BeautifulSoup as bs
-from urllib.parse import urlparse as ur
-
-
+import pandas as pd
 #Необходимо собрать информацию о вакансиях на вводимую должность (используем input или через аргументы)
 #с сайтов Superjob и HH. Приложение должно анализировать несколько страниц сайта (также вводим через
 # input или аргументы). Получившийся список должен содержать в себе минимум:
@@ -15,43 +13,78 @@ from urllib.parse import urlparse as ur
 # Структура должна быть одинаковая для вакансий с обоих сайтов. Общий результат можно вывести с
 # помощью dataFrame через pandas.
 
-print('Введите название должности')
-job = input()
-print('Результаты поиска:')
 
-url = 'https://hh.ru'
-
-params = {'clusters': 'true',
-          'enable_snippets': 'true',
-          'st': 'searchVacancy',
-          'text': job}
-
-headers = {'User-Agent':'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/89.0.4389.72 Safari/537.36'}
-
-response = requests.get(url + '/search/vacancy', params=params, headers=headers)
-if response.ok:
-    soup = bs(response.text, 'html.parser')
-    job_list = soup.findAll('div', {'class': 'vacancy-serp-item'})
-    jobs = []
-    i = 0
+# Функция сбора данных
+def hh_ru(vacancy):
+    offers = []
+    url = 'https://hh.ru'
+    params = {'L_is_autosearch': 'false',
+              'clusters': 'true',
+              'enable_snippets': 'true',
+              'text': vacancy}
+    headers = {'User-Agent':'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/89.0.4389.72 Safari/537.36'}
+    next_page = True
+    job_list = []
+    page = 0
+    while next_page:
+        params['page'] = str(page)
+        response = requests.get(url + '/search/vacancy', params=params, headers=headers)
+        if response.ok:
+            soup = bs(response.text, 'html.parser')
+            job_list += soup.findAll('div', {'class': 'vacancy-serp-item'})
+            if not soup.findAll('a', {'class': 'bloko-button HH-Pager-Controls-Next HH-Pager-Control'}):
+                next_page = False
+        page += 1
     for job in job_list:
-        job_data = {}
-        i = i + 1
-        job_info = job.find('a', {'class': 'bloko-link HH-LinkModifier HH-VacancyActivityAnalytics-Vacancy'})
-        job_name = job_info.getText()
-        job_link = job_info['href']
-        job_employer = job.find('a', {'data-qa': 'vacancy-serp__vacancy-employer'}).getText()
-        job_location = job.find('span', {'data-qa': 'vacancy-serp__vacancy-address'}).getText()
-        job_salary = job.find('div', {'class': 'vacancy-serp-item__sidebar'}).getText()
-        job_site = ur(url).hostname
-        job_data['number'] = i
-        job_data['name'] = job_name
-        job_data['salary'] = job_salary
-        job_data['link'] = job_link
-        job_data['site'] = job_site
-        job_data['employer'] = job_employer
-        job_data['location'] = job_location
+        offers.append(hh_scrap(job))
+    return offers
 
-        jobs.append(job_data)
+# Функция обработки данных
+def hh_scrap(job):
+    job_data = {}
+    job_site = 'hh.ru'
+    job_info = job.find('a', {'class': 'bloko-link HH-LinkModifier HH-VacancyActivityAnalytics-Vacancy'})
+    job_name = job_info.getText()
+    job_link = job_info['href']
+    employer = job.find('div', {'class': 'vacancy-serp-item__meta-info-company'})
+    job_employer = employer.getText()
+    job_location = job.find('span', {'data-qa': 'vacancy-serp__vacancy-address'}).getText()
+    job_salary = job.find('div', {'class': 'vacancy-serp-item__sidebar'}).getText()
+    currency = None
+    if not job_salary:
+        salary_min = None
+        salary_max = None
+        currency = None
+    else:
+        job_salary = job_salary.replace(u'\xa0', u'').replace('-', ' ').split()
+        if job_salary[0] == 'от':
+            job_salary.remove('от')
+            salary_min = int(job_salary.pop(0))
+            salary_max = None
+            currency = ' '.join(job_salary[i] for i in range(len(job_salary)))
+        elif job_salary[0] == 'до':
+            job_salary.remove('до')
+            salary_min = None
+            salary_max = int(job_salary.pop(0))
+            currency = ' '.join(job_salary[i] for i in range(len(job_salary)))
+        else:
+            salary_min = int(job_salary.pop(0))
+            salary_max = int(job_salary.pop(0))
+            currency = ' '.join(job_salary[i] for i in range(len(job_salary)))
+    job_data['name'] = job_name
+    job_data['salary_min'] = salary_min
+    job_data['salary_max'] = salary_max
+    job_data['currency'] = currency
+    job_data['link'] = job_link
+    job_data['site'] = job_site
+    job_data['employer'] = job_employer
+    job_data['location'] = job_location
+    return job_data
 
-pprint(jobs)
+# Сохраняем датафрейма
+result = hh_ru('повар')
+hh_ru_povar = pd.DataFrame(result)
+
+print(len(result))
+
+pprint(result)
