@@ -1,0 +1,34 @@
+#1. Развернуть у себя на компьютере/виртуальной машине/хостинге MongoDB и реализовать функцию, 
+#записывающую собранные вакансии в созданную БД.
+
+def save_in_mongo(offer_list):
+    client = MongoClient('localhost', 27017)
+    db = client['vacancy']
+    hh_jobs = db.hh_jobs
+    hh_jobs.insert_many(offer_list)
+    return hh_jobs
+    
+save_in_mongo(hh_result)
+    
+#2. Написать функцию, которая производит поиск и выводит на экран вакансии с заработной платой 
+#больше введённой суммы.
+
+def salary_search(salary):
+    client = MongoClient('localhost', 27017)
+    db = client['vacancy']
+    hh_jobs = db.hh_jobs
+    job_list = []
+    result = hh_jobs.find({'$or': [{'salary_min': {'$gt': salary}}, {'salary_max': {'$gte': salary}}]})
+    for job in result:
+        job_list.append(job)
+    return job_list
+   
+pprint(salary_search(250000))
+   
+#3. Написать функцию, которая будет добавлять в вашу базу данных только новые вакансии с сайта.
+
+
+
+
+
+
