@@ -1,0 +1,24 @@
+#Написать приложение, которое собирает основные новости с сайтов news.mail.ru, lenta.ru,
+# yandex-новости. Для парсинга использовать XPath. Структура данных должна содержать:
+#название источника;
+#наименование новости;
+#ссылку на новость;
+#дата публикации.
+
+import requests
+import datetime
+from lxml import html
+from pprint import pprint
+
+header = {'User-Agent':'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/89.0.4389.82 Safari/537.36'}
+main_url = 'https://news.mail.ru'
+response = requests.get(main_url, headers=header)
+dom = html.fromstring(response.text)
+mail_news = []
+source = 'news.mail.ru'
+news_name = dom.xpath('//a[@class="list__text"]/text()')
+news_link = dom.xpath('//a[@class="list__text"]/@href')
+news_date = 'Today news'
+
+
+!!!! Извините, идет работа над кодом, скоро здесь будет готовая работа)
