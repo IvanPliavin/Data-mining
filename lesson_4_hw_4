@@ -4,7 +4,6 @@
 #наименование новости;
 #ссылку на новость;
 #дата публикации.
-
 import requests
 import datetime
 from lxml import html
@@ -14,11 +13,26 @@ header = {'User-Agent':'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/53
 main_url = 'https://news.mail.ru'
 response = requests.get(main_url, headers=header)
 dom = html.fromstring(response.text)
-mail_news = []
-source = 'news.mail.ru'
-news_name = dom.xpath('//a[@class="list__text"]/text()')
-news_link = dom.xpath('//a[@class="list__text"]/@href')
-news_date = 'Today news'
+
+mail_news_dom = dom.xpath('//li[@class="list__item"]')
+
+mail_news_list = []
+for el in mail_news_dom:
+    mail_news_dict = {}
+
+    source = 'news.mail.ru'
+    title = el.xpath('.//a[@class="list__text"]/text()')
+    link = el.xpath('.//a[@class="list__text"]/@href')
+    date = 'today'
+
+    mail_news_dict['source'] = source
+    mail_news_dict['title'] = title
+    mail_news_dict['link'] = link
+    mail_news_dict['date'] = date
+
+    mail_news_list.append(mail_news_dict)
+
+pprint(mail_news_list)
 
 
 !!!! Извините, идет работа над кодом, скоро здесь будет готовая работа)
