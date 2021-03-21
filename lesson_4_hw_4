@@ -5,34 +5,86 @@
 #ссылку на новость;
 #дата публикации.
 import requests
-import datetime
+from datetime import datetime
 from lxml import html
 from pprint import pprint
 
+all_news = []
+now_date = datetime.today().strftime('%d-%m-%Y')
+
+# Парсим news.mail.ru первый блок из 6ти строк новостей под картинками
 header = {'User-Agent':'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/89.0.4389.82 Safari/537.36'}
 main_url = 'https://news.mail.ru'
 response = requests.get(main_url, headers=header)
 dom = html.fromstring(response.text)
 
-mail_news_dom = dom.xpath('//li[@class="list__item"]')
+mail_news_dom = dom.xpath('//li[@class="list__item"]/a')
 
-mail_news_list = []
+#mail_news_list = []
 for el in mail_news_dom:
     mail_news_dict = {}
 
     source = 'news.mail.ru'
-    title = el.xpath('.//a[@class="list__text"]/text()')
-    link = el.xpath('.//a[@class="list__text"]/@href')
-    date = 'today'
+    title = el.xpath('.//text()')
+    link = el.xpath('.//@href')
+    date = now_date
 
     mail_news_dict['source'] = source
     mail_news_dict['title'] = title
     mail_news_dict['link'] = link
     mail_news_dict['date'] = date
 
-    mail_news_list.append(mail_news_dict)
+    all_news.append(mail_news_dict)
 
-pprint(mail_news_list)
+# Парсим lenta.ru блок из 10ти главные новости справа
+header = {'User-Agent':'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/89.0.4389.82 Safari/537.36'}
+main_url = 'https://lenta.ru/'
+response = requests.get(main_url, headers=header)
+dom = html.fromstring(response.text)
+
+lenta_news_dom = dom.xpath('//section[@class="b-yellow-box js-yellow-box"]//div//a')
+
+#lenta_news_list = []
+for el in lenta_news_dom:
+    lenta_news_dict = {}
+
+    source = 'lenta.ru'
+    title = el.xpath('.//text()')
+    link = el.xpath('.//@href')
+    date = now_date
+
+    lenta_news_dict['source'] = source
+    lenta_news_dict['title'] = title
+    lenta_news_dict['link'] = link
+    lenta_news_dict['date'] = date
+
+    all_news.append(lenta_news_dict)
+
+#Парсим Яндекс новости 65 карточек
+header = {'User-Agent':'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/89.0.4389.82 Safari/537.36'}
+main_url = 'https://yandex.ru/news/'
+response = requests.get(main_url, headers=header)
+dom = html.fromstring(response.text)
+
+yandex_news_dom = dom.xpath('//article')
+
+for el in yandex_news_dom:
+    yandex_news_dict = {}
+
+    source = el.xpath('.//span//a//@aria-label')
+    title = el.xpath('.//h2[@class="mg-card__title"]//text()')
+    link = el.xpath('.//div[@class="mg-card__inner"]/a/@href | .//div[@class="mg-card__text"]/a/@href')
+    date = now_date + ' ' + el.xpath('.//span[@class="mg-card-source__time"]//text()')[0]
+
+    yandex_news_dict['source'] = source
+    yandex_news_dict['title'] = title
+    yandex_news_dict['link'] = link
+    yandex_news_dict['date'] = date
+
+    all_news.append(yandex_news_dict)
+
+pprint(all_news)
+
 
 
 !!!! Извините, идет работа над кодом, скоро здесь будет готовая работа)
