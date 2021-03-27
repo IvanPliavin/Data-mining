@@ -1,0 +1,72 @@
+# Написать программу, которая собирает входящие письма из своего
+# или тестового почтового ящика и сложить данные о письмах в базу
+# данных (от кого, дата отправки, тема письма, текст письма полный)
+# Логин тестового ящика: study.ai_172@mail.ru
+# Пароль тестового ящика: NextPassword172
+
+
+from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.common.keys import Keys
+from pymongo import MongoClient
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.common.by import By
+from selenium.webdriver.common.action_chains import ActionChains
+import time
+from pprint import pprint
+
+# Функция сбора данных
+def mail_scrapper():
+    data_dict = {}
+    data_dict['contact'] = driver.find_element_by_class_name('letter-contact').text
+    data_dict['date'] = driver.find_element_by_class_name('letter__date').text
+    data_dict['title'] = driver.find_element_by_tag_name('h2').text
+    data_dict['text'] = driver.find_element_by_class_name('letter-body').text
+    data_list.append(data_dict)
+
+# Функция сохранения в БД
+def save_in_mongo(file):
+    client = MongoClient('localhost', 27017)
+    db = client['emails']
+    emails = db.emails
+    emails.insert_many(file)
+    return emails
+
+# Настраиваем драйвер
+chrome_options = Options()
+chrome_options.add_argument('start-maximized')
+driver = webdriver.Chrome(options=chrome_options)
+data_list = []
+
+# Запускаем скрипт
+driver.get('https://mail.ru')
+login = driver.find_element_by_name('login')
+login.send_keys('study.ai_172@mail.ru')
+login.send_keys(Keys.ENTER)
+time.sleep(1)
+
+password = driver.find_element_by_name('password')
+password.send_keys('NextPassword172')
+password.send_keys(Keys.ENTER)
+time.sleep(2)
+
+try:
+    first_el = driver.find_element_by_class_name('llc__content')
+    first_el.click()
+    while True:
+        try:
+            time.sleep(2)
+            button = driver.find_element_by_xpath(
+                '//span[@class="button2 button2_has-ico button2_arrow-down button2_pure button2_short button2_ico-text-top button2_hover-support js-shortcut"]')
+            mail_scrapper()
+            button.click()
+        except:
+            break
+    mail_scrapper()
+    print('Письма собраны')
+    driver.quit()
+    save_in_mongo(data_list)
+except:
+    print('Писем нет!')
+    driver.quit()
