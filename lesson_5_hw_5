@@ -70,3 +70,54 @@ try:
 except:
     print('Писем нет!')
     driver.quit()
+
+#Написать программу, которая собирает «Хиты продаж» с сайта техники mvideo
+# и складывает данные в БД. Магазины можно выбрать свои.
+# Главный критерий выбора: динамически загружаемые товары
+
+from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
+from pymongo import MongoClient
+import json
+import time
+from pprint import pprint
+
+# Настраиваем драйвер
+chrome_options = Options()
+chrome_options.add_argument('start-maximized')
+driver = webdriver.Chrome(options=chrome_options)
+data_list = []
+
+driver.get('https://www.mvideo.ru/')
+time.sleep(2)
+
+
+# Скролим страницу до целевого значения "Хиты продаж"
+target = driver.find_element_by_xpath('//body/div[3]/div[1]/div[3]/div[1]/div[4]/div[1]/div[1]/div[1]/div[1]')
+target.location_once_scrolled_into_view
+
+# Собираем данные
+items_list = []
+info = 0
+click = 0
+while click < 6:
+    items = driver.find_elements_by_xpath('//div[contains(text(), "Хиты продаж")][1]/../../..//div/ul/li//h4/a')
+    for item in items:
+        info = json.loads(item.get_attribute('data-product-info'))
+        if info not in items_list:
+            items_list.append(info)
+    button = driver.find_element_by_xpath('//body/div[3]/div[1]/div[3]/div[1]/div[4]/div[1]/div[2]/div[1]/div[1]/a[2]')
+    time.sleep(3)
+    button.click()
+    click += 1
+
+# Функция сохранения в БД
+def save_in_mongo(file):
+    client = MongoClient('localhost', 27017)
+    db = client['hits']
+    hits = db.hits
+    hits.insert_many(file)
+    return hits
+
+save_in_mongo(items_list)
+
