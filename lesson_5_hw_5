@@ -110,6 +110,7 @@ while click < 6:
     time.sleep(3)
     button.click()
     click += 1
+driver.quit()
 
 # Функция сохранения в БД
 def save_in_mongo(file):
