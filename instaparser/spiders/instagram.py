@@ -15,7 +15,7 @@ class InstagramSpider(scrapy.Spider):
     inst_login = 'plyavini'
     inst_pass = '#PWD_INSTAGRAM_BROWSER:10:1618314903:AXRQANKUfUukbA1QKswFReuc7jh+2' \
                 '/3bAEX7l985NfHWJiI+vxaUU9ANU8DB38famn1YGL01tn2HAQ7hm5Wsvr9uIcqjxvv8TPc' \
-                'PzZGQ2RwM79PBzVKh7y0CZK+8zYDTStEFdrPnwEbW8Pralw=='
+                'PzZGQ2RwM79PBzVKh7y0CZK+8zYDTStEF..........'
     #parse_user = 'viktoriia_2752'
                 # 'alexeyzharkoff'
     parse_user_list = ['viktoriia_2752', 'alexeyzharkoff']
